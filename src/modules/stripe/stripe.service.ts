@@ -14,6 +14,7 @@ export class StripeService {
       quantity: number;
     }[],
     summaryId: number,
+    rate: any,
     headers: any,
   ) {
     const stripe = require('stripe')(`${process.env.STRIPE_SECRET_KEY}`);
@@ -37,6 +38,28 @@ export class StripeService {
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
+      shipping_options: [
+        {
+          shipping_rate_data: {
+            type: 'fixed_amount',
+            fixed_amount: {
+              amount: rate.amount * 100,
+              currency: rate.currency,
+            },
+            display_name: rate.provider + ', ' + rate.servicelevel.name,
+            delivery_estimate: {
+              minimum: {
+                unit: 'business_day',
+                value: rate.estimatedDays,
+              },
+              maximum: {
+                unit: 'business_day',
+                value: rate.estimatedDays + 1,
+              },
+            },
+          },
+        },
+      ],
       line_items: lineItems,
       mode: 'payment',
       success_url: headers.origin + '/success',

@@ -158,6 +158,7 @@ export class ProductsController {
     const orderSummary =
       await this.ordersSummaryService.getOrderSummary(summaryId);
     if (orderSummary) {
+      const rate = await this.shippoService.getRate(orderSummary.rateId);
       const itemsObj = JSON.parse(orderSummary.items);
       const results = await this.productsService.getProducts(
         itemsObj.map((t) => t.id),
@@ -170,7 +171,13 @@ export class ProductsController {
           imageUrl: t.imageUrl,
           quantity: itemsObj.find((tq) => tq.id === t.id)?.quantity ?? 1,
         }));
-        return this.stripeService.checkout(user.id, items, summaryId, headers);
+        return this.stripeService.checkout(
+          user.id,
+          items,
+          summaryId,
+          rate,
+          headers,
+        );
       } else throw new NotFoundException('Products not found!');
     } else throw new NotFoundException('Order Summary not Found!');
   }
